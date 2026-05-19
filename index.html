@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SourceWatch — Regulatory Intelligence Platform</title>
+<style>
+  :root {
+    --navy: #0a1628;
+    --blue: #1a3a6b;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --white: #ffffff;
+    --off: #f8fafc;
+    --border: #e2e8f0;
+    --dark: #1e293b;
+    --gray: #64748b;
+    --lgray: #94a3b8;
+    --critical: #dc2626;
+    --critical-bg: #fee2e2;
+    --important: #ea580c;
+    --important-bg: #fff7ed;
+    --monitor: #d97706;
+    --monitor-bg: #fffbeb;
+    --success: #16a34a;
+    --success-bg: #dcfce7;
+    --surface: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --sidebar-w: 240px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--off); color: var(--text); min-height: 100vh; }
+
+  /* AUTH PAGES */
+  .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%); padding: 20px; }
+  .auth-card { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 440px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+  .auth-logo { text-align: center; margin-bottom: 32px; }
+  .auth-logo h1 { font-size: 28px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+  .auth-logo p { font-size: 13px; color: var(--gray); margin-top: 4px; }
+  .auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 28px; }
+  .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; color: var(--lgray); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+  .form-group input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--dark); outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-primary { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--gray); }
+  .auth-footer a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 600; }
+  .auth-error { background: var(--critical-bg); color: var(--critical); border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .auth-success { background: var(--success-bg); color: #166534; border: 1px solid #86efac; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .pending-notice { background: var(--monitor-bg); border: 1px solid #fde68a; border-radius: 12px; padding: 20px; text-align: center; }
+  .pending-notice h3 { font-size: 16px; color: var(--monitor); margin-bottom: 8px; }
+  .pending-notice p { font-size: 13px; color: var(--gray); line-height: 1.5; }
+
+  /* MAIN APP */
+  .app { display: none; min-height: 100vh; }
+  .app.visible { display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo h1 { font-size: 20px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+  .sidebar-logo span { font-size: 11px; color: #93c5fd; display: block; margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; color: #475569; letter-spacing: 1px; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #94a3b8; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border-radius: 0; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+  .nav-item.active { background: rgba(37,99,235,0.25); color: white; border-right: 3px solid var(--accent); }
+  .nav-item .badge { margin-left: auto; background: var(--critical); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+  .nav-item .badge.orange { background: var(--important); }
+  .sidebar-user { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-user .user-name { font-size: 13px; font-weight: 600; color: white; }
+  .sidebar-user .user-firm { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .sidebar-user .logout-btn { font-size: 12px; color: #64748b; cursor: pointer; margin-top: 8px; }
+  .sidebar-user .logout-btn:hover { color: #94a3b8; }
+
+  /* MAIN CONTENT */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { background: white; border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 18px; font-weight: 700; color: var(--dark); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  /* CONTENT AREA */
+  .content { padding: 24px; flex: 1; }
+
+  /* CARDS */
+  .card { background: white; border-radius: 12px; border: 1px solid var(--border); }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .card-body { padding: 20px; }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+  .stat-card .stat-label { font-size: 12px; font-weight: 600; color: var(--lgray); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .stat-value { font-size: 32px; font-weight: 800; color: var(--dark); margin: 8px 0 4px; line-height: 1; }
+  .stat-card .stat-sub { font-size: 12px; color: var(--gray); }
+  .stat-card .stat-bar { height: 3px; border-radius: 2px; margin-top: 12px; }
+
+  /* SCAN STATUS */
+  .scan-status { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+  .scan-status .scan-info { display: flex; align-items: center; gap: 12px; }
+  .scan-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); }
+  .scan-dot.scanning { background: var(--accent); animation: pulse 1.5s infinite; }
+  .scan-dot.error { background: var(--critical); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .scan-text { font-size: 14px; color: var(--dark); font-weight: 500; }
+  .scan-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-blue { background: var(--accent); color: white; }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-outline { background: white; color: var(--dark); border: 1.5px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; color: var(--gray); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--off); color: var(--dark); }
+  .btn-critical { background: var(--critical); color: white; }
+  .btn-success { background: var(--success); color: white; }
+
+  /* IMPORTANCE BADGES */
+  .badge-importance { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+  .badge-critical { background: var(--critical-bg); color: var(--critical); }
+  .badge-important { background: var(--important-bg); color: var(--important); }
+  .badge-monitor { background: var(--monitor-bg); color: var(--monitor); }
+  .badge-filtered { background: #f1f5f9; color: var(--lgray); }
+  .badge-new { background: var(--success-bg); color: var(--success); }
+  .badge-updated { background: var(--accent-light); color: var(--accent); }
+  .badge-removed { background: var(--critical-bg); color: var(--critical); }
+
+  /* ALERTS LIST */
+  .alerts-filters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border); background: white; color: var(--gray); transition: all 0.15s; }
+  .filter-chip.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
+  .filter-chip .chip-count { font-size: 11px; font-weight: 700; margin-left: 4px; }
+
+  .alert-card { background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; transition: box-shadow 0.15s; }
+  .alert-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .alert-card.critical { border-left: 4px solid var(--critical); }
+  .alert-card.important { border-left: 4px solid var(--important); }
+  .alert-card.monitor { border-left: 4px solid var(--monitor); }
+
+  .alert-header { padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; cursor: pointer; }
+  .alert-header-left { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+  .alert-meta { flex: 1; min-width: 0; }
+  .alert-institution { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .alert-page { font-size: 13px; color: var(--accent); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert-badges { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .alert-time { font-size: 11px; color: var(--lgray); white-space: nowrap; }
+  .alert-actions-row { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+  .alert-body { padding: 0 16px 16px; display: none; }
+  .alert-body.open { display: block; }
+
+  /* DIFF VIEWER */
+  .diff-container { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin: 12px 0; }
+  .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: var(--navy); }
+  .diff-col-header { padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+  .diff-col-header.before { color: #fca5a5; border-right: 1px solid rgba(255,255,255,0.1); }
+  .diff-col-header.after { color: #86efac; }
+  .diff-body { display: grid; grid-template-columns: 1fr 1fr; }
+  .diff-col { padding: 12px; font-size: 13px; line-height: 1.7; font-family: Georgia, serif; }
+  .diff-col.before { background: #fef2f2; border-right: 1px solid var(--border); color: #7f1d1d; }
+  .diff-col.after { background: #f0fdf4; color: #14532d; }
+  .diff-word-removed { background: #fecaca; text-decoration: line-through; border-radius: 2px; padding: 0 2px; }
+  .diff-word-added { background: #bbf7d0; font-weight: 600; border-radius: 2px; padding: 0 2px; }
+
+  /* CURRENT TEXT BOX */
+  .current-text-box { border-radius: 8px; overflow: hidden; border: 1px solid #c4b5fd; margin: 12px 0; }
+  .current-text-header { background: var(--navy); padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .current-text-header span { font-size: 11px; font-weight: 700; color: #c4b5fd; letter-spacing: 0.5px; }
+  .current-text-body { background: #faf5ff; padding: 12px; font-size: 13px; color: #4c1d95; line-height: 1.6; font-family: Georgia, serif; max-height: 150px; overflow: hidden; position: relative; }
+  .current-text-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, #faf5ff); }
+
+  /* AI ANALYSIS BOX */
+  .ai-box { border-radius: 8px; border: 1px solid #bfdbfe; overflow: hidden; margin: 12px 0; }
+  .ai-box-header { background: var(--accent); padding: 8px 12px; }
+  .ai-box-header span { font-size: 11px; font-weight: 700; color: white; letter-spacing: 0.5px; }
+  .ai-box-body { background: #f0f7ff; padding: 12px; }
+  .ai-box-section { margin-bottom: 10px; }
+  .ai-box-section:last-child { margin-bottom: 0; }
+  .ai-box-label { font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .ai-box-text { font-size: 13px; color: var(--dark); line-height: 1.5; }
+
+  /* ACTION BUTTONS */
+  .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* REVIEW STATUS */
+  .review-status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .status-new { background: var(--accent-light); color: var(--accent); }
+  .status-reviewed { background: var(--success-bg); color: var(--success); }
+  .status-action_taken { background: #f3f4f6; color: #374151; }
+  .status-assigned { background: #fef3c7; color: #92400e; }
+  .status-escalated { background: var(--critical-bg); color: var(--critical); }
+
+  /* NOTES */
+  .notes-list { margin-top: 10px; }
+  .note-item { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
+  .note-author { font-size: 11px; font-weight: 600; color: #92400e; }
+  .note-text { font-size: 13px; color: var(--dark); margin-top: 4px; line-height: 1.4; }
+  .note-time { font-size: 11px; color: var(--lgray); margin-top: 4px; }
+
+  /* NOTE INPUT */
+  .note-input-row { display: flex; gap: 8px; margin-top: 10px; }
+  .note-input { flex: 1; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+  .note-input:focus { border-color: var(--accent); }
+
+  /* DASHBOARD GRID */
+  .dashboard-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  .activity-feed { background: white; border-radius: 12px; border: 1px solid var(--border); }
+  .activity-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .activity-text { font-size: 13px; color: var(--dark); line-height: 1.4; }
+  .activity-time { font-size: 11px; color: var(--lgray); margin-top: 2px; }
+
+  /* JURISDICTION BREAKDOWN */
+  .jur-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .jur-item:last-child { border-bottom: none; }
+  .jur-name { font-size: 14px; font-weight: 500; color: var(--dark); }
+  .jur-count { font-size: 20px; font-weight: 800; color: var(--accent); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; width: 700px; max-width: 95vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+  .modal-header { padding: 16px 24px; background: var(--navy); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 15px; font-weight: 700; color: white; }
+  .modal-close { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-title { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .empty-text { font-size: 14px; color: var(--gray); line-height: 1.5; max-width: 400px; margin: 0 auto; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--dark); color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; max-width: 320px; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--critical); }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* SCAN PROGRESS BAR */
+  .scan-progress { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
+  .scan-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+  .scan-progress.visible { display: block; }
+
+  /* ADMIN PANEL */
+  .user-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .user-row:last-child { border-bottom: none; }
+  .user-info .user-name { font-size: 14px; font-weight: 600; color: var(--dark); }
+  .user-info .user-detail { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .user-actions { display: flex; gap: 6px; }
+
+  /* REPORT MODAL */
+  .report-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .report-option { border: 2px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.15s; }
+  .report-option.selected { border-color: var(--accent); background: var(--accent-light); }
+  .report-option h4 { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .report-option p { font-size: 12px; color: var(--gray); }
+
+  /* SOURCE HEALTH */
+  .health-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .health-row:last-child { border-bottom: none; }
+  .health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .health-ok { background: var(--success); }
+  .health-fail { background: var(--critical); }
+  .health-warn { background: var(--monitor); }
+  .health-name { font-size: 13px; color: var(--dark); font-weight: 500; flex: 1; }
+  .health-status { font-size: 11px; color: var(--gray); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .diff-body { grid-template-columns: 1fr; }
+  }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* SEARCH BAR */
+  .search-bar { position: relative; flex: 1; max-width: 360px; }
+  .search-bar input { width: 100%; padding: 8px 12px 8px 36px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+  .search-bar input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--lgray); font-size: 14px; }
+
+  /* AUDIT TRAIL */
+  .audit-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .audit-item:last-child { border-bottom: none; }
+  .audit-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+  .audit-text { font-size: 13px; color: var(--dark); line-height: 1.4; }
+  .audit-meta { font-size: 11px; color: var(--lgray); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH PAGES -->
+<div id="authPage" class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>SourceWatch</h1>
+      <p>Regulatory Intelligence Platform</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('signup')">Create Account</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div id="loginError" class="auth-error"></div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@firm.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <div class="auth-footer">
+        Don't have an account? <a onclick="switchTab('signup')">Create one</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm" style="display:none">
+      <div id="signupError" class="auth-error"></div>
+      <div id="signupSuccess" class="auth-success"></div>
+      <div id="pendingNotice" class="pending-notice" style="display:none">
+        <h3>Account Pending Approval</h3>
+        <p>Your account has been created and is awaiting admin approval. You will be able to sign in once approved.</p>
+      </div>
+      <div id="signupFields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="signupName" placeholder="Jane Smith">
+          </div>
+          <div class="form-group">
+            <label>Job Title</label>
+            <input type="text" id="signupTitle" placeholder="Compliance Officer">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Firm / Organisation Name</label>
+          <input type="text" id="signupFirm" placeholder="Smith & Partners LLP">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@firm.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signupPassword" placeholder="Min. 8 characters">
+        </div>
+        <button class="btn-primary" onclick="doSignup()">Create Account</button>
+        <div class="auth-footer">
+          Already have an account? <a onclick="switchTab('login')">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>SourceWatch</h1>
+      <span>Regulatory Intelligence</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Monitor</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span>&#9632;</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('alerts')" id="navAlerts">
+        <span>&#9679;</span> Alerts
+        <span class="badge" id="criticalBadge" style="display:none">0</span>
+      </div>
+      <div class="nav-section">Intelligence</div>
+      <div class="nav-item" onclick="showPage('sources')">
+        <span>&#9632;</span> Sources
+      </div>
+      <div class="nav-item" onclick="showPage('reports')">
+        <span>&#9632;</span> Reports
+      </div>
+      <div class="nav-section">Admin</div>
+      <div class="nav-item" id="navAdmin" style="display:none" onclick="showPage('admin')">
+        <span>&#9632;</span> Users
+        <span class="badge orange" id="pendingBadge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('settings')">
+        <span>&#9632;</span> Settings
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-name" id="sidebarUserName">Loading...</div>
+      <div class="user-firm" id="sidebarUserFirm"></div>
+      <div class="logout-btn" onclick="logout()">Sign out</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="search-bar">
+          <span class="search-icon">&#128269;</span>
+          <input type="text" placeholder="Search alerts..." id="searchInput" oninput="filterAlerts()">
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="triggerScan()" id="scanBtn">
+          &#9654; Run Scan
+        </button>
+        <button class="btn btn-blue btn-sm" onclick="openReportModal()">
+          &#8659; Generate Report
+        </button>
+      </div>
+    </header>
+
+    <!-- SCAN STATUS BAR -->
+    <div style="padding: 0 24px; margin-top: 16px;" id="scanStatusWrap">
+      <div class="scan-status" id="scanStatus">
+        <div class="scan-info">
+          <div class="scan-dot" id="scanDot"></div>
+          <div>
+            <div class="scan-text" id="scanText">System ready</div>
+            <div class="scan-sub" id="scanSub">Last scan: checking...</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color: var(--gray);" id="scanStats"></div>
+      </div>
+      <div class="scan-progress" id="scanProgress">
+        <div class="scan-progress-bar" id="scanProgressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- PAGES -->
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="pageDashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Critical Alerts</div>
+            <div class="stat-value" id="statCritical">0</div>
+            <div class="stat-sub">Require immediate action</div>
+            <div class="stat-bar" style="background:var(--critical-bg)"><div style="height:3px;border-radius:2px;background:var(--critical);width:0%" id="barCritical"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Important</div>
+            <div class="stat-value" id="statImportant">0</div>
+            <div class="stat-sub">Review this week</div>
+            <div class="stat-bar" style="background:var(--important-bg)"><div style="height:3px;border-radius:2px;background:var(--important);width:0%" id="barImportant"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Monitor</div>
+            <div class="stat-value" id="statMonitor">0</div>
+            <div class="stat-sub">Keep an eye on</div>
+            <div class="stat-bar" style="background:var(--monitor-bg)"><div style="height:3px;border-radius:2px;background:var(--monitor);width:0%" id="barMonitor"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sources Active</div>
+            <div class="stat-value" id="statSources">77</div>
+            <div class="stat-sub">Monitored daily</div>
+            <div class="stat-bar" style="background:var(--success-bg)"><div style="height:3px;border-radius:2px;background:var(--success);width:100%"></div></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Recent Alerts</div>
+                <button class="btn btn-ghost btn-sm" onclick="showPage('alerts')">View all</button>
+              </div>
+              <div id="dashboardAlerts">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header"><div class="card-title">By Jurisdiction</div></div>
+              <div class="card-body" id="jurBreakdown">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Recent Activity</div></div>
+              <div id="activityFeed">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTS PAGE -->
+      <div class="page" id="pageAlerts">
+        <div class="alerts-filters" id="alertsFilters">
+          <div class="filter-chip active" onclick="setFilter('all')" data-filter="all">All <span class="chip-count" id="countAll">0</span></div>
+          <div class="filter-chip" onclick="setFilter('critical')" data-filter="critical">&#128308; Critical <span class="chip-count" id="countCritical">0</span></div>
+          <div class="filter-chip" onclick="setFilter('important')" data-filter="important">&#128992; Important <span class="chip-count" id="countImportant">0</span></div>
+          <div class="filter-chip" onclick="setFilter('monitor')" data-filter="monitor">&#128993; Monitor <span class="chip-count" id="countMonitor">0</span></div>
+          <div class="filter-chip" onclick="setFilter('unreviewed')" data-filter="unreviewed">Unreviewed</div>
+          <div class="filter-chip" onclick="setFilter('mine')" data-filter="mine">Assigned to me</div>
+        </div>
+
+        <!-- Jurisdiction filter -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="jurFilters"></div>
+
+        <div id="alertsList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- SOURCES PAGE -->
+      <div class="page" id="pageSources">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Monitored Sources (77)</div>
+            <div style="display:flex;gap:8px">
+              <input type="text" placeholder="Search sources..." id="sourcesSearch" oninput="filterSources()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;">
+            </div>
+          </div>
+          <div id="sourcesList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS PAGE -->
+      <div class="page" id="pageReports">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Intelligence Reports</div>
+            <button class="btn btn-blue btn-sm" onclick="openReportModal()">Generate New Report</button>
+          </div>
+          <div class="card-body">
+            <div class="empty-state">
+              <div class="empty-icon">&#128196;</div>
+              <div class="empty-title">Generate a Compliance Report</div>
+              <div class="empty-text">Create a professional PDF intelligence brief to share with your team or clients.</div>
+              <button class="btn btn-blue" style="margin-top:20px" onclick="openReportModal()">Generate Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PAGE -->
+      <div class="page" id="pageAdmin">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Pending Account Approvals</div>
+          </div>
+          <div id="pendingUsers">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div class="card-title">All Users</div>
+          </div>
+          <div id="allUsers">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="pageSettings">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Platform Settings</div></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>OpenAI API Key (optional - enables AI analysis)</label>
+              <input type="password" id="openaiKey" placeholder="sk-..." style="width:100%;max-width:400px">
+            </div>
+            <div style="margin-top:8px;font-size:13px;color:var(--gray)">Without an API key the system still works fully — AI analysis uses intelligent rule-based summaries instead.</div>
+            <div class="form-group" style="margin-top:20px">
+              <label>Auto Scan Time (UTC)</label>
+              <select id="scanHour" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="6" selected>06:00 UTC (6AM)</option>
+                <option value="7">07:00 UTC</option>
+                <option value="8">08:00 UTC</option>
+                <option value="0">00:00 UTC (Midnight)</option>
+              </select>
+            </div>
+            <button class="btn btn-blue" onclick="showToast('Settings saved','success')">Save Settings</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><div class="card-title">Source Health</div></div>
+          <div id="sourceHealth">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Generate Intelligence Report</div>
+      <button class="modal-close" onclick="closeModal('reportModal')">x</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Report Title</label>
+        <input type="text" id="reportTitle" value="Regulatory Intelligence Brief" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Jurisdiction Scope</label>
+        <select id="reportJurisdiction" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+          <option value="all">All Jurisdictions</option>
+          <option value="GB">United Kingdom</option>
+          <option value="KY">Cayman Islands</option>
+          <option value="BM">Bermuda</option>
+          <option value="JE">Jersey</option>
+          <option value="GG">Guernsey</option>
+          <option value="GI">Gibraltar</option>
+          <option value="VG">British Virgin Islands</option>
+          <option value="INT">International</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Changes to Include</label>
+        <select id="reportLimit" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+          <option value="20">Last 20 changes</option>
+          <option value="50" selected>Last 50 changes</option>
+          <option value="100">Last 100 changes</option>
+        </select>
+      </div>
+      <button class="btn btn-blue" style="width:100%;padding:14px;font-size:15px;margin-top:8px" onclick="generateReport()" id="generateBtn">
+        Generate PDF Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DIFF MODAL -->
+<div class="modal-overlay" id="diffModal">
+  <div class="modal" style="width:900px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="diffModalTitle">Content Comparison</div>
+        <div style="font-size:11px;color:#93c5fd;margin-top:2px">
+          <span style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;margin-right:6px">Red = removed</span>
+          <span style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px">Green = added</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('diffModal')">x</button>
+    </div>
+    <div class="modal-body" id="diffModalBody">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let token = localStorage.getItem('sw_token');
+let currentUser = null;
+let allAlerts = [];
+let currentFilter = 'all';
+let currentJurFilter = 'all';
+let scanPollInterval = null;
+
+// ══════════════════════════════════════════════════════════
+// API HELPER
+// ══════════════════════════════════════════════════════════
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+  return res;
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await api(path, opts);
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+  });
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!email || !password) { errEl.textContent = 'Please enter email and password'; errEl.style.display = 'block'; return; }
+
+  try {
+    const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    if (!data.ok) {
+      if (data.error && data.error.includes('pending')) {
+        errEl.textContent = 'Your account is pending admin approval. Please wait for approval before signing in.';
+      } else {
+        errEl.textContent = data.error || 'Invalid email or password';
+      }
+      errEl.style.display = 'block';
+      return;
+    }
+    token = data.token;
+    localStorage.setItem('sw_token', token);
+    currentUser = data.user;
+    initApp();
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const title = document.getElementById('signupTitle').value.trim();
+  const firm = document.getElementById('signupFirm').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const errEl = document.getElementById('signupError');
+  errEl.style.display = 'none';
+
+  if (!name || !firm || !email || !password) {
+    errEl.textContent = 'Please fill in all required fields';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const data = await apiFetch('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ full_name: name, job_title: title, firm_name: firm, email, password })
+    });
+    if (!data.ok) { errEl.textContent = data.error || 'Signup failed'; errEl.style.display = 'block'; return; }
+    document.getElementById('signupFields').style.display = 'none';
+    document.getElementById('pendingNotice').style.display = 'block';
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('sw_token');
+  if (scanPollInterval) clearInterval(scanPollInterval);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('authPage').style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════════════════
+// APP INIT
+// ══════════════════════════════════════════════════════════
+async function initApp() {
+  document.getElementById('authPage').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+
+  if (!currentUser) {
+    try {
+      const data = await apiFetch('/api/auth/me');
+      if (!data.ok) { logout(); return; }
+      currentUser = data.user;
+    } catch(e) { logout(); return; }
+  }
+
+  // Check approval
+  if (currentUser.status === 'pending') {
+    logout();
+    document.getElementById('authPage').style.display = 'flex';
+    switchTab('signup');
+    document.getElementById('signupFields').style.display = 'none';
+    document.getElementById('pendingNotice').style.display = 'block';
+    return;
+  }
+
+  // Set user info
+  document.getElementById('sidebarUserName').textContent = currentUser.full_name || currentUser.email;
+  document.getElementById('sidebarUserFirm').textContent = currentUser.firm_name || '';
+
+  // Show admin nav if admin
+  if (currentUser.role === 'admin') {
+    document.getElementById('navAdmin').style.display = 'flex';
+    loadPendingUsers();
+  }
+
+  loadDashboard();
+  loadAlerts();
+  startScanPoller();
+}
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+
+  const titles = { dashboard: 'Dashboard', alerts: 'Alerts', sources: 'Sources', reports: 'Reports', admin: 'User Management', settings: 'Settings' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+
+  if (page === 'alerts') loadAlerts();
+  if (page === 'sources') loadSources();
+  if (page === 'admin') loadAdminPage();
+  if (page === 'settings') loadSourceHealth();
+}
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    const data = await apiFetch('/api/stats');
+    if (data.ok && data.stats) {
+      const s = data.stats;
+      document.getElementById('statCritical').textContent = s.critical || s.high || 0;
+      document.getElementById('statImportant').textContent = s.important || s.medium || 0;
+      document.getElementById('statMonitor').textContent = s.monitor || s.low || 0;
+    }
+  } catch(e) {}
+
+  // Load recent alerts for dashboard
+  try {
+    const data = await apiFetch('/api/changes?limit=5');
+    const el = document.getElementById('dashboardAlerts');
+    if (!data.ok || !data.data?.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128203;</div><div class="empty-title">No alerts yet</div><div class="empty-text">Run a scan to start monitoring regulatory sources.</div></div>';
+      return;
+    }
+    el.innerHTML = data.data.map(c => renderAlertMini(c)).join('');
+    renderJurBreakdown(data.data);
+  } catch(e) {
+    document.getElementById('dashboardAlerts').innerHTML = '<div style="padding:20px;color:var(--gray);text-align:center">Failed to load alerts</div>';
+  }
+
+  loadActivity();
+}
+
+function renderAlertMini(c) {
+  const imp = c.importance || getImportanceFromPriority(c.priority);
+  const impLabel = { critical: '&#128308; CRITICAL', important: '&#128992; IMPORTANT', monitor: '&#128993; MONITOR' };
+  return `<div style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer" onclick="showPage('alerts')">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:14px;font-weight:700;color:var(--dark)">${esc(c.institution_name)}</span>
+      <span class="badge-importance badge-${imp}" style="font-size:10px">${impLabel[imp] || imp}</span>
+    </div>
+    <div style="font-size:12px;color:var(--accent)">${esc((c.page_title || '').substring(0, 70))}</div>
+    <div style="font-size:11px;color:var(--lgray);margin-top:4px">${c.jurisdiction_name || c.jurisdiction_code} &middot; ${formatDate(c.detected_at)}</div>
+  </div>`;
+}
+
+function renderJurBreakdown(alerts) {
+  const counts = {};
+  alerts.forEach(a => {
+    const jur = a.jurisdiction_name || a.jurisdiction_code || 'Unknown';
+    counts[jur] = (counts[jur] || 0) + 1;
+  });
+  const el = document.getElementById('jurBreakdown');
+  const items = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  if (!items.length) { el.innerHTML = '<div style="color:var(--gray);font-size:13px">No data yet</div>'; return; }
+  el.innerHTML = items.map(([jur, count]) => `
+    <div class="jur-item">
+      <div class="jur-name">${esc(jur)}</div>
+      <div class="jur-count">${count}</div>
+    </div>`).join('');
+}
+
+async function loadActivity() {
+  try {
+    const data = await apiFetch('/api/activity?limit=8');
+    const el = document.getElementById('activityFeed');
+    if (!data.ok || !data.data?.length) {
+      el.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px;text-align:center">No recent activity</div>';
+      return;
+    }
+    el.innerHTML = data.data.map(a => `
+      <div class="activity-item">
+        <div class="activity-dot" style="background:${a.type === 'scan' ? 'var(--success)' : 'var(--accent)'}"></div>
+        <div>
+          <div class="activity-text">${esc(a.description || a.message || '')}</div>
+          <div class="activity-time">${formatDate(a.created_at || a.timestamp)}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════
+// ALERTS
+// ══════════════════════════════════════════════════════════
+async function loadAlerts() {
+  try {
+    const data = await apiFetch('/api/changes?limit=100');
+    if (!data.ok) return;
+    allAlerts = data.data || [];
+    renderAlerts();
+    updateCounts();
+    renderJurFilters();
+  } catch(e) {
+    document.getElementById('alertsList').innerHTML = '<div style="padding:20px;color:var(--gray);text-align:center">Failed to load alerts</div>';
+  }
+}
+
+function updateCounts() {
+  const counts = { all: allAlerts.length, critical: 0, important: 0, monitor: 0 };
+  allAlerts.forEach(a => {
+    const imp = a.importance || getImportanceFromPriority(a.priority);
+    if (counts[imp] !== undefined) counts[imp]++;
+  });
+  document.getElementById('countAll').textContent = counts.all;
+  document.getElementById('countCritical').textContent = counts.critical;
+  document.getElementById('countImportant').textContent = counts.important;
+  document.getElementById('countMonitor').textContent = counts.monitor;
+
+  // Update dashboard stats
+  document.getElementById('statCritical').textContent = counts.critical;
+  document.getElementById('statImportant').textContent = counts.important;
+  document.getElementById('statMonitor').textContent = counts.monitor;
+
+  // Sidebar badge
+  const critEl = document.getElementById('criticalBadge');
+  if (counts.critical > 0) { critEl.textContent = counts.critical; critEl.style.display = 'inline-flex'; }
+  else critEl.style.display = 'none';
+}
+
+function renderJurFilters() {
+  const jurs = [...new Set(allAlerts.map(a => a.jurisdiction_code).filter(Boolean))];
+  const names = { GB:'UK', KY:'Cayman', BM:'Bermuda', JE:'Jersey', GG:'Guernsey', GI:'Gibraltar', VG:'BVI', INT:'International' };
+  const el = document.getElementById('jurFilters');
+  el.innerHTML = '<div class="filter-chip active" onclick="setJurFilter(\'all\')" data-jur="all">All Jurisdictions</div>' +
+    jurs.map(j => `<div class="filter-chip" onclick="setJurFilter('${j}')" data-jur="${j}">${names[j] || j}</div>`).join('');
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('[data-filter]').forEach(el => el.classList.toggle('active', el.dataset.filter === f));
+  renderAlerts();
+}
+
+function setJurFilter(j) {
+  currentJurFilter = j;
+  document.querySelectorAll('[data-jur]').forEach(el => el.classList.toggle('active', el.dataset.jur === j));
+  renderAlerts();
+}
+
+function filterAlerts() { renderAlerts(); }
+
+function getImportanceFromPriority(priority) {
+  if (priority === 'critical') return 'critical';
+  if (priority === 'high') return 'critical';
+  if (priority === 'medium') return 'important';
+  if (priority === 'low') return 'monitor';
+  return 'monitor';
+}
+
+function renderAlerts() {
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let filtered = allAlerts.filter(a => {
+    const imp = a.importance || getImportanceFromPriority(a.priority);
+    if (currentFilter === 'critical' && imp !== 'critical') return false;
+    if (currentFilter === 'important' && imp !== 'important') return false;
+    if (currentFilter === 'monitor' && imp !== 'monitor') return false;
+    if (currentFilter === 'unreviewed' && a.action_status !== 'new' && a.action_status !== null) return false;
+    if (currentFilter === 'mine' && a.assigned_to !== currentUser?.id) return false;
+    if (currentJurFilter !== 'all' && a.jurisdiction_code !== currentJurFilter) return false;
+    if (search && !((a.institution_name || '').toLowerCase().includes(search) || (a.page_title || '').toLowerCase().includes(search))) return false;
+    return true;
+  });
+
+  const el = document.getElementById('alertsList');
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128203;</div><div class="empty-title">No alerts found</div><div class="empty-text">No alerts match your current filters. Run a scan to detect regulatory changes.</div></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(c => renderAlertCard(c)).join('');
+}
+
+function renderAlertCard(c) {
+  const imp = c.importance || getImportanceFromPriority(c.priority);
+  const impLabels = { critical: '&#128308; CRITICAL', important: '&#128992; IMPORTANT', monitor: '&#128993; MONITOR' };
+  const changeLabels = { new: 'NEW DOC', updated: 'UPDATED', removed: 'REMOVED' };
+  const statusLabels = { new: 'Unreviewed', reviewed: 'Reviewed', action_taken: 'Action Taken', assigned: 'Assigned', escalated: 'Escalated' };
+  const status = c.action_status || 'new';
+
+  const hasDiff = c.content_before && c.content_after && c.content_before.length > 20;
+  const hasContent = c.content_after && c.content_after.length > 50;
+  const hasAI = c.ai_summary && !c.ai_summary.startsWith('Page content') && !c.ai_summary.startsWith('Document removed');
+
+  return `<div class="alert-card ${imp}" id="alert-${c.id}">
+    <div class="alert-header" onclick="toggleAlert(${c.id})">
+      <div class="alert-header-left">
+        <div class="alert-meta">
+          <div class="alert-institution">${esc(c.institution_name || 'Unknown')}</div>
+          <div class="alert-page">${esc((c.page_title || '').substring(0,80))}</div>
+          <div class="alert-badges">
+            <span class="badge-importance badge-${imp}">${impLabels[imp] || imp}</span>
+            <span class="badge-importance badge-${c.change_type}">${changeLabels[c.change_type] || c.change_type}</span>
+            <span class="review-status status-${status}">${statusLabels[status] || status}</span>
+            ${c.escalated ? '<span class="badge-importance badge-critical">ESCALATED</span>' : ''}
+            ${c.jurisdiction_name || c.jurisdiction_code ? `<span style="font-size:11px;color:var(--lgray)">${esc(c.jurisdiction_name || c.jurisdiction_code)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div class="alert-time">${formatDate(c.detected_at)}</div>
+        ${hasDiff ? '<span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:2px 6px;border-radius:4px;font-weight:600">Has Diff</span>' : ''}
+      </div>
+    </div>
+
+    <div class="alert-body" id="body-${c.id}">
+      ${hasContent ? `
+      <div class="current-text-box">
+        <div class="current-text-header">
+          <span>CURRENT REGULATORY TEXT</span>
+          <span style="font-size:10px;color:#94a3b8">captured from source</span>
+        </div>
+        <div class="current-text-body">
+          ${esc(cleanText(c.content_after).substring(0, 500))}...
+          <div class="current-text-fade"></div>
+        </div>
+      </div>` : ''}
+
+      ${hasDiff ? renderInlineDiff(c) : ''}
+
+      ${hasAI ? `
+      <div class="ai-box">
+        <div class="ai-box-header"><span>AI ANALYSIS</span></div>
+        <div class="ai-box-body">
+          <div class="ai-box-section">
+            <div class="ai-box-label">What Changed</div>
+            <div class="ai-box-text">${esc(c.ai_summary || '')}</div>
+          </div>
+          ${c.compliance_impact ? `<div class="ai-box-section">
+            <div class="ai-box-label">Compliance Impact</div>
+            <div class="ai-box-text">${esc(c.compliance_impact)}</div>
+          </div>` : ''}
+          ${c.recommended_action ? `<div class="ai-box-section">
+            <div class="ai-box-label">Recommended Action</div>
+            <div class="ai-box-text">${esc(c.recommended_action)}</div>
+          </div>` : ''}
+        </div>
+      </div>` : (c.ai_summary ? `<div style="background:var(--off);border-radius:8px;padding:12px;margin:12px 0;font-size:13px;color:var(--dark)">${esc(c.ai_summary)}</div>` : '')}
+
+      ${c.exact_url ? `<div style="margin:8px 0"><a href="${c.exact_url}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">&#128279; View Source: ${esc(c.exact_url.substring(0,60))}</a></div>` : ''}
+
+      <div class="action-buttons">
+        ${status === 'new' ? `<button class="btn btn-sm btn-success" onclick="doAction(${c.id},'mark_reviewed',event)">&#10003; Mark Reviewed</button>` : ''}
+        ${status === 'reviewed' ? `<button class="btn btn-sm btn-outline" onclick="doAction(${c.id},'mark_action_taken',event)">Action Taken</button>` : ''}
+        ${status !== 'escalated' ? `<button class="btn btn-sm btn-critical" onclick="doAction(${c.id},'escalate',event)">&#8679; Escalate</button>` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="showNotes(${c.id},event)">&#128172; Notes</button>
+        ${hasDiff ? `<button class="btn btn-sm btn-blue" onclick="showFullDiff(${c.id},'${esc((c.page_title||'').replace(/'/g,""))}',event)">View Full Diff</button>` : ''}
+        <button class="btn btn-sm btn-outline" onclick="showFullContent(${c.id},'${esc((c.page_title||'').replace(/'/g,""))}',event)">Read Full Text</button>
+      </div>
+
+      <div id="notes-${c.id}" style="display:none;margin-top:12px">
+        <div id="notesList-${c.id}"></div>
+        <div class="note-input-row">
+          <input class="note-input" id="noteInput-${c.id}" placeholder="Add a note..." onkeypress="if(event.key==='Enter')submitNote(${c.id})">
+          <button class="btn btn-sm btn-blue" onclick="submitNote(${c.id})">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderInlineDiff(c) {
+  const beforeText = cleanText(c.content_before).substring(0, 600);
+  const afterText = cleanText(c.content_after).substring(0, 600);
+  const { oldHtml, newHtml } = wordDiff(beforeText, afterText);
+  return `<div class="diff-container">
+    <div class="diff-header">
+      <div class="diff-col-header before">&#9664; PREVIOUS VERSION</div>
+      <div class="diff-col-header after">&#9654; CURRENT VERSION</div>
+    </div>
+    <div class="diff-body">
+      <div class="diff-col before">${oldHtml}</div>
+      <div class="diff-col after">${newHtml}</div>
+    </div>
+  </div>`;
+}
+
+function wordDiff(oldText, newText) {
+  const oldWords = oldText.split(/(\s+)/);
+  const newWords = newText.split(/(\s+)/);
+  const oldSet = new Set(oldText.toLowerCase().split(/\s+/));
+  const newSet = new Set(newText.toLowerCase().split(/\s+/));
+  const oldHtml = oldWords.map(w => {
+    if (/^\s+$/.test(w)) return w;
+    return newSet.has(w.toLowerCase()) ? esc(w) : `<span class="diff-word-removed">${esc(w)}</span>`;
+  }).join('');
+  const newHtml = newWords.map(w => {
+    if (/^\s+$/.test(w)) return w;
+    return oldSet.has(w.toLowerCase()) ? esc(w) : `<span class="diff-word-added">${esc(w)}</span>`;
+  }).join('');
+  return { oldHtml, newHtml };
+}
+
+function toggleAlert(id) {
+  const body = document.getElementById('body-' + id);
+  if (body) body.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════════════════
+// ALERT ACTIONS
+// ══════════════════════════════════════════════════════════
+async function doAction(changeId, action, event) {
+  if (event) event.stopPropagation();
+  try {
+    const data = await apiFetch('/api/changes/actions', {
+      method: 'POST',
+      body: JSON.stringify({ change_id: changeId, action })
+    });
+    if (data.ok) {
+      showToast(data.message || 'Done', 'success');
+      loadAlerts();
+    } else {
+      showToast(data.error || 'Failed', 'error');
+    }
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function showNotes(changeId, event) {
+  if (event) event.stopPropagation();
+  const el = document.getElementById('notes-' + changeId);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display === 'block') loadNotes(changeId);
+}
+
+async function loadNotes(changeId) {
+  try {
+    const data = await apiFetch('/api/changes/actions', {
+      method: 'POST',
+      body: JSON.stringify({ change_id: changeId, action: 'get_notes' })
+    });
+    const el = document.getElementById('notesList-' + changeId);
+    if (!el) return;
+    if (!data.ok || !data.data?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--gray);padding:4px 0">No notes yet</div>'; return; }
+    el.innerHTML = data.data.map(n => `
+      <div class="note-item">
+        <div class="note-author">${esc(n.full_name || n.email)}</div>
+        <div class="note-text">${esc(n.note)}</div>
+        <div class="note-time">${formatDate(n.created_at)}</div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function submitNote(changeId) {
+  const input = document.getElementById('noteInput-' + changeId);
+  const note = input?.value?.trim();
+  if (!note) return;
+  try {
+    const data = await apiFetch('/api/changes/actions', {
+      method: 'POST',
+      body: JSON.stringify({ change_id: changeId, action: 'add_note', note })
+    });
+    if (data.ok) { input.value = ''; loadNotes(changeId); showToast('Note added', 'success'); }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════
+// DIFF MODAL
+// ══════════════════════════════════════════════════════════
+async function showFullDiff(id, title, event) {
+  if (event) event.stopPropagation();
+  document.getElementById('diffModalTitle').textContent = 'Content Comparison — ' + title;
+  document.getElementById('diffModalBody').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('diffModal').classList.add('open');
+
+  try {
+    const data = await apiFetch('/api/changes/' + id + '/compare');
+    if (!data.ok || (!data.data?.before && !data.data?.after)) {
+      document.getElementById('diffModalBody').innerHTML = '<div class="empty-state"><div class="empty-icon">&#128196;</div><div class="empty-title">No comparison data</div><div class="empty-text">This change was detected before snapshots were available. Future changes will show full diffs.</div></div>';
+      return;
+    }
+    const { before, after } = data.data;
+    const { oldHtml, newHtml } = wordDiff(before || '', after || '');
+    document.getElementById('diffModalBody').innerHTML = `
+      <div class="diff-container" style="max-height:70vh">
+        <div class="diff-header">
+          <div class="diff-col-header before">&#9664; PREVIOUS VERSION</div>
+          <div class="diff-col-header after">&#9654; CURRENT VERSION</div>
+        </div>
+        <div class="diff-body" style="max-height:calc(70vh - 40px);overflow:auto">
+          <div class="diff-col before" style="max-height:none">${oldHtml}</div>
+          <div class="diff-col after" style="max-height:none">${newHtml}</div>
+        </div>
+      </div>
+      <div style="padding:10px;font-size:12px;color:var(--gray);text-align:center">
+        Words in <span style="background:#fecaca;padding:0 4px;border-radius:3px;text-decoration:line-through">red</span> were removed. Words in <span style="background:#bbf7d0;padding:0 4px;border-radius:3px;font-weight:600">green</span> were added.
+      </div>`;
+  } catch(e) {
+    document.getElementById('diffModalBody').innerHTML = '<div style="padding:20px;color:var(--gray)">Failed to load comparison</div>';
+  }
+}
+
+async function showFullContent(id, title, event) {
+  if (event) event.stopPropagation();
+  document.getElementById('diffModalTitle').textContent = 'Current Regulatory Text — ' + title;
+  document.getElementById('diffModalBody').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('diffModal').classList.add('open');
+
+  try {
+    const data = await apiFetch('/api/changes/' + id + '/compare');
+    const content = data.data?.after || data.data?.before || '';
+    document.getElementById('diffModalBody').innerHTML = content
+      ? `<div style="font-size:13px;line-height:1.8;color:var(--dark);font-family:Georgia,serif;white-space:pre-wrap">${esc(cleanText(content))}</div>`
+      : '<div style="padding:20px;color:var(--gray);text-align:center">No content available</div>';
+  } catch(e) {}
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════
+// SOURCES
+// ══════════════════════════════════════════════════════════
+async function loadSources() {
+  try {
+    const data = await apiFetch('/api/sources?limit=100');
+    const el = document.getElementById('sourcesList');
+    if (!data.ok || !data.data?.length) { el.innerHTML = '<div style="padding:20px;color:var(--gray)">No sources found</div>'; return; }
+
+    const jurNames = { GB:'United Kingdom', KY:'Cayman Islands', BM:'Bermuda', JE:'Jersey', GG:'Guernsey', GI:'Gibraltar', VG:'British Virgin Islands', INT:'International' };
+    const byJur = {};
+    data.data.forEach(s => {
+      const jur = s.jurisdiction_code || 'Unknown';
+      (byJur[jur] = byJur[jur] || []).push(s);
+    });
+
+    el.innerHTML = Object.entries(byJur).map(([jur, sources]) => `
+      <div style="border-bottom:1px solid var(--border)">
+        <div style="padding:10px 16px;background:var(--off);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.3px">
+          ${jurNames[jur] || jur} (${sources.length})
+        </div>
+        ${sources.map(s => `
+          <div class="health-row" style="padding:10px 16px">
+            <div class="health-dot ${s.consecutive_failures > 0 ? 'health-fail' : 'health-ok'}"></div>
+            <div style="flex:1">
+              <div class="health-name">${esc(s.institution_name)}</div>
+              <div class="health-status">${esc((s.exact_url || '').substring(0, 60))}</div>
+            </div>
+            <div style="font-size:11px;color:var(--lgray)">
+              ${s.last_scanned_at ? 'Scanned ' + formatDate(s.last_scanned_at) : 'Not yet scanned'}
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('sourcesList').innerHTML = '<div style="padding:20px;color:var(--gray)">Failed to load sources</div>';
+  }
+}
+
+function filterSources() {
+  const q = document.getElementById('sourcesSearch')?.value?.toLowerCase() || '';
+  document.querySelectorAll('#sourcesList .health-row').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════════════════════
+async function loadPendingUsers() {
+  try {
+    const data = await apiFetch('/api/users/approve');
+    const badge = document.getElementById('pendingBadge');
+    if (data.ok && data.data?.length) {
+      badge.textContent = data.data.length;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+async function loadAdminPage() {
+  try {
+    const data = await apiFetch('/api/users/approve');
+    const el = document.getElementById('pendingUsers');
+    if (!data.ok || !data.data?.length) {
+      el.innerHTML = '<div style="padding:20px;color:var(--gray);text-align:center">No pending approvals</div>';
+    } else {
+      el.innerHTML = '<div style="padding:0 20px">' + data.data.map(u => `
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-name">${esc(u.full_name)} &mdash; ${esc(u.firm_name || '')}</div>
+            <div class="user-detail">${esc(u.email)} &middot; ${esc(u.job_title || '')} &middot; Requested ${formatDate(u.approval_requested_at)}</div>
+          </div>
+          <div class="user-actions">
+            <button class="btn btn-sm btn-success" onclick="approveUser(${u.id},'approve')">Approve</button>
+            <button class="btn btn-sm btn-ghost" onclick="approveUser(${u.id},'reject')">Reject</button>
+          </div>
+        </div>`).join('') + '</div>';
+    }
+
+    // All users
+    const allData = await apiFetch('/api/users');
+    const allEl = document.getElementById('allUsers');
+    if (!allData.ok || !allData.data?.length) { allEl.innerHTML = '<div style="padding:20px;color:var(--gray)">No users</div>'; return; }
+    allEl.innerHTML = '<div style="padding:0 20px">' + allData.data.map(u => `
+      <div class="user-row">
+        <div class="user-info">
+          <div class="user-name">${esc(u.full_name || u.email)} &mdash; ${esc(u.firm_name || 'N/A')}</div>
+          <div class="user-detail">${esc(u.email)} &middot; ${u.role} &middot; <span class="review-status status-${u.status === 'active' ? 'reviewed' : 'new'}">${u.status}</span></div>
+        </div>
+      </div>`).join('') + '</div>';
+  } catch(e) {
+    document.getElementById('pendingUsers').innerHTML = '<div style="padding:20px;color:var(--gray)">Failed to load users</div>';
+  }
+}
+
+async function approveUser(userId, action) {
+  try {
+    const data = await apiFetch('/api/users/approve', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, action })
+    });
+    if (data.ok) { showToast(data.message, 'success'); loadAdminPage(); loadPendingUsers(); }
+    else showToast(data.error, 'error');
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+// ══════════════════════════════════════════════════════════
+// SCAN
+// ══════════════════════════════════════════════════════════
+async function triggerScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.textContent = 'Starting...';
+  try {
+    const data = await apiFetch('/api/scans', { method: 'POST', body: JSON.stringify({ jurisdiction: 'all' }) });
+    if (data.ok) { showToast('Scan started — monitoring ' + (data.sourcesCount || 77) + ' sources', 'success'); startScanPoller(); }
+    else showToast(data.error || 'Failed to start scan', 'error');
+  } catch(e) { showToast('Error starting scan', 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#9654; Run Scan';
+}
+
+function startScanPoller() {
+  if (scanPollInterval) clearInterval(scanPollInterval);
+  pollScanStatus();
+  scanPollInterval = setInterval(pollScanStatus, 5000);
+}
+
+async function pollScanStatus() {
+  try {
+    const data = await apiFetch('/api/scans');
+    if (!data.ok) return;
+
+    const dot = document.getElementById('scanDot');
+    const text = document.getElementById('scanText');
+    const sub = document.getElementById('scanSub');
+    const stats = document.getElementById('scanStats');
+    const progress = document.getElementById('scanProgress');
+    const bar = document.getElementById('scanProgressBar');
+
+    if (data.scanning) {
+      dot.className = 'scan-dot scanning';
+      text.textContent = 'Scanning in progress...';
+      sub.textContent = data.progress?.current ? 'Currently: ' + data.progress.current : 'Running...';
+      const pct = data.progress?.total > 0 ? Math.round((data.progress.done / data.progress.total) * 100) : 0;
+      stats.textContent = `${data.progress?.done || 0} / ${data.progress?.total || 77} sources — ${data.progress?.changes || 0} changes found`;
+      progress.classList.add('visible');
+      bar.style.width = pct + '%';
+    } else {
+      dot.className = 'scan-dot';
+      text.textContent = 'System ready — monitoring active';
+      sub.textContent = 'Auto scan runs daily at 6:00 AM UTC';
+      stats.textContent = '';
+      progress.classList.remove('visible');
+
+      // If was scanning, reload alerts
+      if (progress.classList.contains('visible')) loadAlerts();
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════
+// REPORT
+// ══════════════════════════════════════════════════════════
+function openReportModal() {
+  document.getElementById('reportModal').classList.add('open');
+}
+
+async function generateReport() {
+  const btn = document.getElementById('generateBtn');
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+
+  try {
+    const body = {
+      jurisdiction: document.getElementById('reportJurisdiction').value,
+      limit: parseInt(document.getElementById('reportLimit').value),
+      title: document.getElementById('reportTitle').value,
+    };
+    const res = await api('/api/reports/generate', { method: 'POST', body: JSON.stringify(body) });
+    if (!res.ok) { const err = await res.json(); showToast(err.error || 'Failed to generate', 'error'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'SourceWatch_Report_' + new Date().toISOString().split('T')[0] + '.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+    closeModal('reportModal');
+    showToast('Report downloaded successfully', 'success');
+  } catch(e) {
+    showToast('Error generating report', 'error');
+  }
+
+  btn.textContent = 'Generate PDF Report';
+  btn.disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════
+// SOURCE HEALTH
+// ══════════════════════════════════════════════════════════
+async function loadSourceHealth() {
+  try {
+    const data = await apiFetch('/api/sources?limit=100');
+    const el = document.getElementById('sourceHealth');
+    if (!data.ok || !data.data?.length) { el.innerHTML = '<div style="padding:20px;color:var(--gray)">No data</div>'; return; }
+    const failed = data.data.filter(s => s.consecutive_failures > 0);
+    const ok = data.data.filter(s => !s.consecutive_failures || s.consecutive_failures === 0);
+    el.innerHTML = '<div style="padding:12px 16px">' +
+      `<div style="font-size:13px;color:var(--gray);margin-bottom:12px">${ok.length} sources healthy &middot; ${failed.length} sources with issues</div>` +
+      (failed.length ? failed.map(s => `
+        <div class="health-row">
+          <div class="health-dot health-fail"></div>
+          <div style="flex:1">
+            <div class="health-name">${esc(s.institution_name)}</div>
+            <div class="health-status">${esc(s.last_failure_reason || 'Unknown error')} &middot; ${s.consecutive_failures} consecutive failures</div>
+          </div>
+        </div>`).join('') : '<div style="color:var(--success);font-size:13px">All sources healthy</div>') +
+      '</div>';
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════
+function esc(str) {
+  return (str || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cleanText(text) {
+  return (text || '').replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch(e) { return dateStr; }
+}
+
+function showToast(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ══════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// ENTER KEY FOR LOGIN
+// ══════════════════════════════════════════════════════════
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('loginPassword') === document.activeElement) doLogin();
+    if (document.getElementById('signupPassword') === document.activeElement) doSignup();
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// STARTUP
+// ══════════════════════════════════════════════════════════
+if (token) {
+  initApp();
+} else {
+  document.getElementById('authPage').style.display = 'flex';
+}
+</script>
+</body>
+</html>
